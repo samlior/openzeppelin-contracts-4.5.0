@@ -36,9 +36,7 @@ contract ERC20 is IERC20 {
     uint256 private _totalSupply;
 
     /**
-     * @dev Returns the amount of tokens in existence.
-     *
-     * See `IERC20.totalSupply`.
+     * @dev Returns the amount of tokens in existence. See `IERC20.totalSupply`.
      */
     function totalSupply() public view returns (uint256) {
         return _totalSupply;
@@ -55,7 +53,7 @@ contract ERC20 is IERC20 {
      * @dev Moves tokens from the caller's account to a specified recipient
      * (`to`). See `IERC20.transfer`.
      *
-     * Requirements
+     * Requirements:
      *
      * - `to` cannot be the zero address.
      */
@@ -65,12 +63,21 @@ contract ERC20 is IERC20 {
     }
 
     /**
-     * @dev Configures the amount that a `spender` account is able to spend on
-     * behalf of the caller. See `IERC20.approve`.
+     * @dev Returns the remaining number of tokens that `spender` will be
+     * allowed to spend on behalf of `owner` through `transferFrom`. See
+     * `IERC20.allowance`.
+     */
+    function allowance(address owner, address spender) public view returns (uint256) {
+        return _allowances[owner][spender];
+    }
+
+    /**
+     * @dev Sets the allowance of `spender` over the caller's tokens to
+     * `value`.
      *
-     * > `approve` can be abused by an untrusted spender.
+     * > `approve` can be abused by an untrusted spender. See `IERC20.approve`.
      *
-     * Requirements
+     * Requirements:
      *
      * - `spender` cannot be the zero address.
      */
@@ -80,22 +87,15 @@ contract ERC20 is IERC20 {
     }
 
     /**
-     * @dev Function to check the amount of tokens that an owner allowed to a spender.
-     * @param owner address The address which owns the funds.
-     * @param spender address The address which will spend the funds.
-     * @return A uint256 specifying the amount of tokens still available for the spender.
-     */
-    function allowance(address owner, address spender) public view returns (uint256) {
-        return _allowances[owner][spender];
-    }
-
-    /**
-     * @dev Transfer tokens from one address to another.
-     * Note that while this function emits an Approval event, this is not required as per the specification,
-     * and other compliant implementations may not emit the event.
-     * @param from address The address which you want to send tokens from
-     * @param to address The address which you want to transfer to
-     * @param value uint256 the amount of tokens to be transferred
+     * @dev Moves tokens from one account (`from`) to another (`to`). See
+     * `IERC20.transferFrom`.
+     *
+     * Emits an `Approval` event indicating the updated allowance. This is not
+     * required by the EIP. See the note at the beginning of [`ERC20`](#erc20);
+     *
+     * Requirements:
+     * - `from`, `to` cannot be the zero address.
+     * - `from` must have allowance for `to`'s tokens of at least `value`.
      */
     function transferFrom(address from, address to, uint256 value) public returns (bool) {
         _transfer(from, to, value);
@@ -104,14 +104,12 @@ contract ERC20 is IERC20 {
     }
 
     /**
-     * @dev Increase the amount of tokens that an owner allowed to a spender.
-     * approve should be called when _allowances[msg.sender][spender] == 0. To increment
-     * allowed value is better to use this function to avoid 2 calls (and wait until
-     * the first transaction is mined)
-     * From MonolithDAO Token.sol
-     * Emits an Approval event.
-     * @param spender The address which will spend the funds.
-     * @param addedValue The amount of tokens to increase the allowance by.
+     * @dev Atomically increases the allowance granted to `spender` by the caller.
+     *
+     * This is an alternative to `approve` that can be used as a mitigation for
+     * problems described in `IERC20.approve`.
+     *
+     * Emits an `Approval` event indicating the updated allowance.
      */
     function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
         _approve(msg.sender, spender, _allowances[msg.sender][spender].add(addedValue));
@@ -119,14 +117,12 @@ contract ERC20 is IERC20 {
     }
 
     /**
-     * @dev Decrease the amount of tokens that an owner allowed to a spender.
-     * approve should be called when _allowances[msg.sender][spender] == 0. To decrement
-     * allowed value is better to use this function to avoid 2 calls (and wait until
-     * the first transaction is mined)
-     * From MonolithDAO Token.sol
-     * Emits an Approval event.
-     * @param spender The address which will spend the funds.
-     * @param subtractedValue The amount of tokens to decrease the allowance by.
+     * @dev Atomically decreases the allowance granted to `spender` by the caller.
+     *
+     * This is an alternative to `approve` that can be used as a mitigation for
+     * problems described in `IERC20.approve`.
+     *
+     * Emits an `Approval` event indicating the updated allowance.
      */
     function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
         _approve(msg.sender, spender, _allowances[msg.sender][spender].sub(subtractedValue));
@@ -134,10 +130,16 @@ contract ERC20 is IERC20 {
     }
 
     /**
-     * @dev Transfer token for a specified addresses.
-     * @param from The address to transfer from.
-     * @param to The address to transfer to.
-     * @param value The amount to be transferred.
+     * @dev Moves tokens from a specified account (`from`) to a specified
+     * recipient (`to`). See `IERC20.transfer`.
+     *
+     * This is an internal function equivalent to `transfer`.
+     *
+     * Requirements:
+     *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `from` must have a balance of at least `value`.
      */
     function _transfer(address from, address to, uint256 value) internal {
         require(to != address(0), "ERC20: transfer to the zero address");
