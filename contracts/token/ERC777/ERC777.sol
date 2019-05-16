@@ -9,8 +9,19 @@ import "../../utils/Address.sol";
 import "../../introspection/IERC1820Registry.sol";
 
 /**
- * @title ERC777 token implementation, with granularity harcoded to 1.
- * @author etsvigun <utgarda@gmail.com>, Bertrand Masius <github@catageeks.tk>
+ * @dev Implementation of the `IERC777` interface.
+ *
+ * This implementation is agnostic to the way tokens are created. This means
+ * that a supply mechanism has to be added in a derived contract using `_mint`.
+ *
+ * Support for ERC20 is included in this contract, as specified by the EIP: both
+ * the ERC777 and ERC20 interfaces can be safely used when interacting with it.
+ * Both `IERC777.Sent` and `IERC20.Transfer` events are emitted on token
+ * movements.
+ *
+ * Additionally, the `granularity` value is hard-coded to `1`, meaning that there
+ * are no special restrictions in the amount of tokens that created, moved, or
+ * destroyed. This makes integration with ERC20 applications seamless.
  */
 contract ERC777 is IERC777, IERC20 {
     using SafeMath for uint256;
@@ -49,6 +60,9 @@ contract ERC777 is IERC777, IERC20 {
     // ERC20-allowances
     mapping (address => mapping (address => uint256)) private _allowances;
 
+    /**
+     * @dev `defaultOperators` may be an empty array.
+     */
     constructor(
         string memory name,
         string memory symbol,
@@ -68,22 +82,136 @@ contract ERC777 is IERC777, IERC20 {
     }
 
     /**
-     * @dev Send the amount of tokens from the address msg.sender to the address to
-     * @param to address recipient address
-     * @param amount uint256 amount of tokens to transfer
-     * @param data bytes information attached to the send, and intended for the recipient (to)
+     * See `IERC777.name`.
+     */
+    function name() public view returns (string memory) {
+        return _name;
+    }
+
+    /**
+     * See `IERC777.symbol`.
+     */
+    function symbol() public view returns (string memory) {
+        return _symbol;
+    }
+
+    /**
+     * See `ERC20Detailed.decimals`.
+     *
+     * Always returns 18, as per the
+     * [ERC777 EIP](https://eips.ethereum.org/EIPS/eip-777#backward-compatibility).
+     */
+    function decimals() public pure returns (uint8) {
+        return 18;
+    }
+
+    /**
+     * See `IERC777.granularity`.
+     *
+     * This implementation always returns `1`.
+     */
+    function granularity() public view returns (uint256) {
+        return 1;
+    }
+
+    /**
+     * See `IERC777.totalSupply`.
+     */
+    function totalSupply() public view returns (uint256) {
+        return _totalSupply;
+    }
+
+    /**
+     * @dev Returns the amount of tokens owned by an account (`owner`).
+     */
+    function balanceOf(address tokenHolder) public view returns (uint256) {
+        return _balances[tokenHolder];
+    }
+
+    /**
+     * @dev See `IERC777.send`.
+     *
+     * Emits `Sent` and `Transfer` events.
      */
     function send(address to, uint256 amount, bytes calldata data) external {
         _sendRequiringReceptionAck(msg.sender, msg.sender, to, amount, data, "");
     }
 
     /**
-     * @dev Send the amount of tokens on behalf of the address from to the address to
-     * @param from address token holder address.
-     * @param to address recipient address
-     * @param amount uint256 amount of tokens to transfer
-     * @param data bytes information attached to the send, and intended for the recipient (to)
-     * @param operatorData bytes extra information provided by the operator (if any)
+     * @dev See `IERC20.transfer`.
+     *
+     * Unlike `send`, `to` is _not_ required to implement the `tokensReceived`
+     * interface if it is a contract.
+     *
+     * Emits `Sent` and `Transfer` events.
+     */
+    function transfer(address to, uint256 value) external returns (bool) {
+        _transfer(msg.sender, msg.sender, to, value);
+        return true;
+    }
+
+    /**
+     * @dev See `IERC777.burn`.
+     *
+     * Emits `Sent` and `Transfer` events.
+     */
+    function burn(uint256 amount, bytes calldata data) external {
+        _burn(msg.sender, msg.sender, amount, data, "");
+    }
+
+    /**
+     * @dev See `IERC777.isOperatorFor`.
+     */
+    function isOperatorFor(
+        address operator,
+        address tokenHolder
+    ) public view returns (bool) {
+        return operator == tokenHolder ||
+            (_defaultOperators[operator] && !_revokedDefaultOperators[tokenHolder][operator]) ||
+            _operators[tokenHolder][operator];
+    }
+
+    /**
+     * @dev See `IERC777.authorizeOperator`.
+     */
+    function authorizeOperator(address operator) external {
+        require(msg.sender != operator, "ERC777: authorizing self as operator");
+
+        if (_defaultOperators[operator]) {
+            delete _revokedDefaultOperators[msg.sender][operator];
+        } else {
+            _operators[msg.sender][operator] = true;
+        }
+
+        emit AuthorizedOperator(operator, msg.sender);
+    }
+
+    /**
+     * @dev See `IERC777.revokeOperator`.
+     */
+    function revokeOperator(address operator) external {
+        require(operator != msg.sender, "ERC777: revoking self as operator");
+
+        if (_defaultOperators[operator]) {
+            _revokedDefaultOperators[msg.sender][operator] = true;
+        } else {
+            delete _operators[msg.sender][operator];
+        }
+
+        emit RevokedOperator(operator, msg.sender);
+    }
+
+    /**
+     * @dev See `IERC777.defaultOperators`.
+     */
+    function defaultOperators() public view returns (address[] memory) {
+        return _defaultOperatorsArray;
+    }
+
+    /**
+     * @dev See `IERC777.operatorSend`.
+     *
+     * Emits `Sent` and `Transfer` events.
      */
     function operatorSend(
         address from,
@@ -99,48 +227,9 @@ contract ERC777 is IERC777, IERC20 {
     }
 
     /**
-     * @dev Transfer token to a specified address.
-     * Required for ERC20 compatiblity. Note that transferring tokens this way may result in locked tokens (i.e. tokens
-     * can be sent to a contract that does not implement the ERC777TokensRecipient interface).
-     * @param to The address to transfer to.
-     * @param value The amount to be transferred.
-     */
-    function transfer(address to, uint256 value) external returns (bool) {
-        _transfer(msg.sender, msg.sender, to, value);
-        return true;
-    }
-
-    /**
-     * @dev Transfer tokens from one address to another.
-     * Note that while this function emits an Approval event, this is not required as per the specification,
-     * and other compliant implementations may not emit the event.
-     * Required for ERC20 compatiblity. Note that transferring tokens this way may result in locked tokens (i.e. tokens
-     * can be sent to a contract that does not implement the ERC777TokensRecipient interface).
-     * @param from address The address which you want to send tokens from
-     * @param to address The address which you want to transfer to
-     * @param value uint256 the amount of tokens to be transferred
-     */
-    function transferFrom(address from, address to, uint256 value) external returns (bool) {
-        _transfer(msg.sender, from, to, value);
-        _approve(from, msg.sender, _allowances[from][msg.sender].sub(value));
-        return true;
-    }
-
-    /**
-     * @dev Burn the amount of tokens from the address msg.sender
-     * @param amount uint256 amount of tokens to transfer
-     * @param data bytes extra information provided by the token holder
-     */
-    function burn(uint256 amount, bytes calldata data) external {
-        _burn(msg.sender, msg.sender, amount, data, "");
-    }
-
-    /**
-     * @dev Burn the amount of tokens on behalf of the address from
-     * @param from address token holder address.
-     * @param amount uint256 amount of tokens to transfer
-     * @param data bytes extra information provided by the token holder
-     * @param operatorData bytes extra information provided by the operator (if any)
+     * @dev See `IERC777.operatorBurn`.
+     *
+     * Emits `Sent` and `Transfer` events.
      */
     function operatorBurn(address from, uint256 amount, bytes calldata data, bytes calldata operatorData) external {
         require(isOperatorFor(msg.sender, from), "ERC777: caller is not an operator for holder");
@@ -148,142 +237,57 @@ contract ERC777 is IERC777, IERC20 {
     }
 
     /**
-     * @dev Authorize an operator for the sender
-     * @param operator address to be authorized as operator
-     */
-    function authorizeOperator(address operator) external {
-        require(msg.sender != operator, "ERC777: authorizing self as operator");
-
-        if (_defaultOperators[operator]) {
-            delete _revokedDefaultOperators[msg.sender][operator];
-        } else {
-            _operators[msg.sender][operator] = true;
-        }
-
-        emit AuthorizedOperator(operator, msg.sender);
-    }
-
-    /**
-     * @dev Revoke operator rights from one of the default operators
-     * @param operator address to revoke operator rights from
-     */
-    function revokeOperator(address operator) external {
-        require(operator != msg.sender, "ERC777: revoking self as operator");
-
-        if (_defaultOperators[operator]) {
-            _revokedDefaultOperators[msg.sender][operator] = true;
-        } else {
-            delete _operators[msg.sender][operator];
-        }
-
-        emit RevokedOperator(operator, msg.sender);
-    }
-
-    /**
-     * @dev Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.
-     * Beware that changing an allowance with this method brings the risk that someone may use both the old
-     * and the new allowance by unfortunate transaction ordering. One possible solution to mitigate this
-     * race condition is to first reduce the spender's allowance to 0 and set the desired value afterwards:
-     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-     * Required for ERC20 compatilibity.
-     * @param spender The address which will spend the funds.
-     * @param value The amount of tokens to be spent.
-     */
-    function approve(address spender, uint256 value) external returns (bool) {
-        _approve(msg.sender, spender, value);
-        return true;
-    }
-
-    /**
-     * @dev Total number of tokens in existence
-     */
-    function totalSupply() public view returns (uint256) {
-        return _totalSupply;
-    }
-
-    /**
-     * @dev Gets the balance of the specified address.
-     * @param tokenHolder The address to query the balance of.
-        * @return uint256 representing the amount owned by the specified address.
-     */
-    function balanceOf(address tokenHolder) public view returns (uint256) {
-        return _balances[tokenHolder];
-    }
-
-    /**
-     * @return the name of the token.
-     */
-    function name() public view returns (string memory) {
-        return _name;
-    }
-
-    /**
-     * @return the symbol of the token.
-     */
-    function symbol() public view returns (string memory) {
-        return _symbol;
-    }
-
-    /**
-     * @return the number of decimals of the token.
-     */
-    function decimals() public pure returns (uint8) {
-        return 18; // The spec requires that decimals be 18
-    }
-
-    /**
-     * @dev Gets the token's granularity,
-     * i.e. the smallest number of tokens (in the basic unit)
-     * which may be minted, sent or burned at any time
-     * @return uint256 granularity
-     */
-    function granularity() public view returns (uint256) {
-        return 1;
-    }
-
-    /**
-     * @dev Get the list of default operators as defined by the token contract.
-     * @return address[] default operators
-     */
-    function defaultOperators() public view returns (address[] memory) {
-        return _defaultOperatorsArray;
-    }
-
-    /**
-     * @dev Indicate whether an address
-     * is an operator of the tokenHolder address
-     * @param operator address which may be an operator of tokenHolder
-     * @param tokenHolder address of a token holder which may have the operator
-     * address as an operator.
-     */
-    function isOperatorFor(
-        address operator,
-        address tokenHolder
-    ) public view returns (bool) {
-        return operator == tokenHolder ||
-            (_defaultOperators[operator] && !_revokedDefaultOperators[tokenHolder][operator]) ||
-            _operators[tokenHolder][operator];
-    }
-
-    /**
-     * @dev Function to check the amount of tokens that an owner allowed to a spender.
-     * Required for ERC20 compatibility.
-     * @param owner address The address which owns the funds.
-     * @param spender address The address which will spend the funds.
-     * @return A uint256 specifying the amount of tokens still available for the spender.
+     * @dev See `IERC20.allowance`.
+     *
+     * Note that operator and allowance concepts are orthogonal: operators may
+     * not have allowance, and accounts with allowance may not be operators
+     * themselves.
      */
     function allowance(address owner, address spender) public view returns (uint256) {
         return _allowances[owner][spender];
     }
 
     /**
-     * @dev Mint tokens. Does not check authorization of operator
-     * @dev the caller may ckeck that operator is authorized before calling
-     * @param operator address operator requesting the operation
-     * @param to address token recipient address
-     * @param amount uint256 amount of tokens to mint
-     * @param userData bytes extra information defined by the token recipient (if any)
-     * @param operatorData bytes extra information provided by the operator (if any)
+     * @dev See `IERC20.approve`.
+     *
+     * Note that accounts cannot have allowance issued by their operators.
+     */
+    function approve(address spender, uint256 value) external returns (bool) {
+        _approve(msg.sender, spender, value);
+        return true;
+    }
+
+   /**
+    * @dev See `IERC20.transferFrom`.
+    *
+    * Note that operator and allowance concepts are orthogonal: operators cannot
+    * call `transferFrom` (unless they have allowance), and accounts with
+    * allowance cannot call `operatorSend` (unless they are operators).
+    *
+    * Emits `Sent` and `Transfer` events.
+    */
+    function transferFrom(address from, address to, uint256 value) external returns (bool) {
+        _transfer(msg.sender, from, to, value);
+        _approve(from, msg.sender, _allowances[from][msg.sender].sub(value));
+        return true;
+    }
+
+    /**
+     * @dev Creates `amount` tokens and assigns them to a specified recipient
+     * (`to`), increasing the total supply.
+     *
+     * If a send hook is registered for `to`, the corresponding function will be
+     * called with `operator`, `data` and `operatorData`.
+     *
+     * See `IERC777Sender` and `IERC777Recipient`.
+     *
+     * Emits `Sent` and `Transfer` events.
+     *
+     * Requirements
+     *
+     * - `to` cannot be the zero address.
+     * - if `to` is a contract, it must implement the `tokensReceived`
+     * interface.
      */
     function _mint(
         address operator,
