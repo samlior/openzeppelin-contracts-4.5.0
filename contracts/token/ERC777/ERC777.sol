@@ -131,7 +131,7 @@ contract ERC777 is IERC777, IERC20 {
     /**
      * @dev See `IERC777.send`.
      *
-     * Emits `Sent` and `Transfer` events.
+     * Also emits a `Transfer` event for ERC20 compatibility.
      */
     function send(address to, uint256 amount, bytes calldata data) external {
         _sendRequiringReceptionAck(msg.sender, msg.sender, to, amount, data, "");
@@ -143,7 +143,7 @@ contract ERC777 is IERC777, IERC20 {
      * Unlike `send`, `to` is _not_ required to implement the `tokensReceived`
      * interface if it is a contract.
      *
-     * Emits `Sent` and `Transfer` events.
+     * Also emits a `Sent` event.
      */
     function transfer(address to, uint256 value) external returns (bool) {
         _transfer(msg.sender, msg.sender, to, value);
@@ -153,7 +153,7 @@ contract ERC777 is IERC777, IERC20 {
     /**
      * @dev See `IERC777.burn`.
      *
-     * Emits `Sent` and `Transfer` events.
+     * Also emits a `Transfer` event for ERC20 compatibility.
      */
     function burn(uint256 amount, bytes calldata data) external {
         _burn(msg.sender, msg.sender, amount, data, "");
