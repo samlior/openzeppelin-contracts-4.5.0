@@ -17,7 +17,7 @@ sections:
       - TokenTimelock
 ---
 
-This set of interfaces, contracts, and utilities are all related to the [ERC20 token standard](https://eips.ethereum.org/EIPS/eip-20).
+This set of interfaces, contracts, and utilities are all related to the [ERC20 Token Standard](https://eips.ethereum.org/EIPS/eip-20).
 
 *For a walkthrough on how to create an ERC20 token read our [ERC20 guide](../../learn-about-tokens.md#constructing-a-nice-erc20-token).*
 
