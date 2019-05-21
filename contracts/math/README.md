@@ -1,5 +1,5 @@
 ---
-title: Math Utilities
+title: Math
 sections:
   - title: Libraries
     contracts:
