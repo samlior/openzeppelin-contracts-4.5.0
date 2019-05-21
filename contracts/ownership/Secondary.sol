@@ -6,6 +6,9 @@ pragma solidity ^0.5.0;
 contract Secondary {
     address private _primary;
 
+    /**
+     * @dev Emitted when the primary contract changes.
+     */
     event PrimaryTransferred(
         address recipient
     );
