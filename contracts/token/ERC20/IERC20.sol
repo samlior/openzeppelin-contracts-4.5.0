@@ -38,12 +38,9 @@ interface IERC20 {
     function allowance(address owner, address spender) external view returns (uint256);
 
     /**
-     * @dev Sets the allowance of `spender` over the caller's tokens to
-     * `value`.
+     * @dev Sets `value` as the allowance of `spender` over the caller's tokens.
      *
      * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * See `allowance` and `transferFrom`.
      *
      * > Beware that changing an allowance with this method brings the risk
      * that someone may use both the old and the new allowance by unfortunate
@@ -57,10 +54,10 @@ interface IERC20 {
     function approve(address spender, uint256 value) external returns (bool);
 
     /**
-     * @dev Moves tokens from one account (`from`) to another (`to`). The
-     * caller must have enough remaining allowance from the owner: at least
-     * `value`. If this operation succeeds, the transferred amount (`value`) is
-     * deducted from the caller's allowance.
+     * @dev Moves tokens from one account (`from`) to another (`to`) using the
+     * allowance mechanism. The caller must have at least `value` allowance
+     * from the owner. If this operation succeeds, the transferred amount
+     * (`value`) is deducted from the caller's allowance.
      *
      * Returns a boolean value indicating whether the operation succeeded.
      *
@@ -72,8 +69,8 @@ interface IERC20 {
     function transferFrom(address from, address to, uint256 value) external returns (bool);
 
     /**
-     * @dev Emitted when tokens are moved from one account (`from`) to anoter
-     * (`to`).
+     * @dev Emitted when `value` tokens are moved from one account (`from`) to
+     * anoter (`to`).
      *
      * Note that `value` may be zero.
      */
