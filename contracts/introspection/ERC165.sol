@@ -6,7 +6,7 @@ import "./IERC165.sol";
  * @dev Implementation of the `IERC165` interface.
  *
  * Contracts may inherit from this and call `_registerInterface` to declare
- * their support.
+ * their support of an interface.
  */
 contract ERC165 is IERC165 {
     /*
