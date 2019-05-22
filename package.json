@@ -63,7 +63,7 @@
     "openzeppelin-test-helpers": "^0.3.2",
     "solhint": "^1.5.0",
     "solidity-coverage": "github:rotcivegaf/solidity-coverage#5875f5b7bc74d447f3312c9c0e9fc7814b482477",
-    "solidity-docgen": "github:OpenZeppelin/solidity-docgen#27b30eb227fe37bd7114d893b109ca95809497d2",
+    "solidity-docgen": "github:OpenZeppelin/solidity-docgen#ffcd28e9239c9374533adf7724943e07a2765026",
     "truffle": "^5.0.14"
   }
 }
