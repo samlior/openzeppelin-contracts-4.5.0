@@ -1,6 +1,6 @@
 ---
-id: learn-about-access-control
-title: Learn About Access Control
+id: access-control
+title: Access Control
 ---
 
 Access control—that is, "who is allowed to do this thing"—is incredibly important in the world of smart contracts. The access control of your contract governs who can mint tokens, who can vote on proposals, who can [`selfdestruct()`](https://blog.zeppelin.solutions/on-the-parity-wallet-multisig-hack-405a8c12e8f7) the contract, and more, so it's very important to understand how you implement it.

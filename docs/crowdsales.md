@@ -1,6 +1,6 @@
 ---
-id: learn-about-crowdsales
-title: Learn About Crowdsales
+id: crowdsales
+title: Crowdsales
 ---
 
 Crowdsales are a popular use for Ethereum; they let you allocate tokens to network participants in various ways, mostly in exchange for Ether. They come in a variety of shapes and flavors, so let's go over the various types available in OpenZeppelin and how to use them.

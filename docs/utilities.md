@@ -1,6 +1,6 @@
 ---
-id: learn-about-utilities
-title: Learn About Utilities
+id: utilities
+title: Utilities
 ---
 
 OpenZeppelin provides a ton of useful utilities that you can use in your project. Here are some of the more popular ones:

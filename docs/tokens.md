@@ -1,6 +1,6 @@
 ---
-id: learn-about-tokens
-title: Learn About Tokens
+id: tokens
+title: Tokens
 ---
 
 Ah, the "token": the world's most powerful and most misused tool. In this section we'll learn to harness the power of native units of account for good and world peace!
