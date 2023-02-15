@@ -62,7 +62,7 @@ module.exports = {
     version: argv.compiler,
     settings: {
       optimizer: {
-        enabled: withOptimizations,
+        enabled: true,
         runs: 200,
       },
     },
@@ -71,6 +71,15 @@ module.exports = {
     hardhat: {
       blockGasLimit: 10000000,
       allowUnlimitedContractSize: !withOptimizations,
+    },
+    avax: {
+      url: "https://api.avax.network/ext/bc/C/rpc",
+    },
+    bsc: {
+      url: "https://bsc-dataseed.binance.org/",
+    },
+    arb: {
+      url: "https://arb1.arbitrum.io/rpc",
     },
   },
   gasReporter: {
