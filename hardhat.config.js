@@ -81,6 +81,9 @@ module.exports = {
     arb: {
       url: "https://arb1.arbitrum.io/rpc",
     },
+    kava: {
+      url: "https://evm.kava.io",
+    },
   },
   gasReporter: {
     currency: "USD",
@@ -112,6 +115,14 @@ module.exports = {
         urls: {
           apiURL: "https://api.arbiscan.io/api",
           browserURL: "https://arbiscan.io/",
+        },
+      },
+      {
+        network: "kava",
+        chainId: 2222,
+        urls: {
+          apiURL: "https://explorer.kava.io/api",
+          browserURL: "https://explorer.kava.io",
         },
       },
     ],
