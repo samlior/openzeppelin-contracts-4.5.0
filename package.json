@@ -50,6 +50,7 @@
   },
   "homepage": "https://openzeppelin.com/contracts/",
   "devDependencies": {
+    "@matterlabs/hardhat-zksync-toolbox": "^0.1.1",
     "@nomiclabs/hardhat-etherscan": "^3.1.0",
     "@nomiclabs/hardhat-truffle5": "^2.0.0",
     "@nomiclabs/hardhat-web3": "^2.0.0",

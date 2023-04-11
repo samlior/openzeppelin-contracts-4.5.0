@@ -57,6 +57,8 @@ allFiredEvents
 # hardhat
 cache
 artifacts
+cache-zk
+artifacts-zk
 
 # Certora
 .certora*

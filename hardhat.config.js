@@ -43,6 +43,7 @@ const argv = require("yargs/yargs")()
 
 require("@nomiclabs/hardhat-truffle5");
 require("@nomiclabs/hardhat-etherscan");
+require("@matterlabs/hardhat-zksync-toolbox");
 
 if (argv.enableGasReport) {
   require("hardhat-gas-reporter");
@@ -58,6 +59,10 @@ const withOptimizations = argv.enableGasReport || argv.compileMode === "producti
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
+  zksolc: {
+    version: "1.3.8",
+    compilerSource: "binary",
+  },
   solidity: {
     version: argv.compiler,
     settings: {
@@ -83,6 +88,24 @@ module.exports = {
     },
     kava: {
       url: "https://evm.kava.io",
+    },
+    goerli: {
+      url: `https://goerli.infura.io/v3/${process.env.INFURA_API_KEY}`,
+    },
+    "zksync-era-testnet": {
+      url: "https://testnet.era.zksync.dev",
+      ethNetwork: "goerli",
+      zksync: true,
+      verifyURL: "https://zksync2-testnet-explorer.zksync.dev/contract_verification",
+    },
+    mainnet: {
+      url: `https://mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
+    },
+    "zksync-era-mainnet": {
+      url: "https://mainnet.era.zksync.io",
+      ethNetwork: "mainnet",
+      zksync: true,
+      verifyURL: "https://zksync2-mainnet-explorer.zksync.io/contract_verification",
     },
   },
   gasReporter: {
